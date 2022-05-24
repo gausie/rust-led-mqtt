@@ -7,6 +7,6 @@ edition = "2021"
 
 [dependencies]
 embedded-graphics = "0.7"
-json = "0.12.4"
+serde_json = "1.0.81"
 rpi-led-matrix = "0.4.0"
 rumqttc = "0.12.0"
