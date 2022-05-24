@@ -1,13 +1,12 @@
-
-use rpi_led_matrix::{LedMatrix, LedCanvas, LedColor, LedMatrixOptions};
 use embedded_graphics::{
     geometry::{Point, Size},
-    prelude::*,
-    primitives::{Rectangle,PrimitiveStyleBuilder},
-    pixelcolor::Rgb888,
     mono_font::{ascii::FONT_5X7, MonoTextStyle},
-    text::Text
+    pixelcolor::Rgb888,
+    prelude::*,
+    primitives::{PrimitiveStyleBuilder, Rectangle},
+    text::Text,
 };
+use rpi_led_matrix::{LedCanvas, LedColor, LedMatrix, LedMatrixOptions};
 
 use std::sync::mpsc;
 
@@ -35,10 +34,14 @@ impl Iterator for Scene<'_> {
         match self {
             Scene::Blank { matrix } => {
                 let mut canvas = matrix.offscreen_canvas();
-                canvas.fill(&LedColor { red: 0, green: 0, blue: 0 });
+                canvas.fill(&LedColor {
+                    red: 0,
+                    green: 0,
+                    blue: 0,
+                });
                 canvas = matrix.swap(canvas);
                 Some(canvas)
-            },
+            }
             Scene::ColourCycle { matrix, step } => {
                 let mut canvas = matrix.offscreen_canvas();
 
@@ -46,18 +49,14 @@ impl Iterator for Scene<'_> {
                 let green = ((*step & 0b1111111100000000) >> 8) as u8;
                 let blue = ((*step & 0b11111111) >> 0) as u8;
 
-                canvas.fill(&LedColor {
-                    red,
-                    green,
-                    blue,
-                });
-                
+                canvas.fill(&LedColor { red, green, blue });
+
                 *step += 1;
 
                 canvas = matrix.swap(canvas);
 
                 Some(canvas)
-            },
+            }
             Scene::OnAir { matrix } => {
                 let mut canvas = matrix.offscreen_canvas();
 
@@ -74,13 +73,17 @@ impl Iterator for Scene<'_> {
                 let text_style = MonoTextStyle::new(&FONT_5X7, Rgb888::RED);
 
                 // We want monospaced...
-                Text::new("ON", Point::new(3, 10), text_style).draw(&mut canvas).ok()?;
+                Text::new("ON", Point::new(3, 10), text_style)
+                    .draw(&mut canvas)
+                    .ok()?;
                 // ... except we want a smaller space :)
-                Text::new("AIR", Point::new(15, 10), text_style).draw(&mut canvas).ok()?;
+                Text::new("AIR", Point::new(15, 10), text_style)
+                    .draw(&mut canvas)
+                    .ok()?;
 
                 canvas = matrix.swap(canvas);
 
-                return Some(canvas);
+                Some(canvas)
             }
         }
     }
@@ -99,19 +102,22 @@ pub fn run(rx: mpsc::Receiver<String>) {
                 if new_scene_id != previous_scene_id {
                     match new_scene_id.as_str() {
                         "colourcycle" => {
-                            scene = Scene::ColourCycle { matrix: &matrix, step: 0 };
-                        },
+                            scene = Scene::ColourCycle {
+                                matrix: &matrix,
+                                step: 0,
+                            };
+                        }
                         "onair" => {
                             scene = Scene::OnAir { matrix: &matrix };
-                        },
+                        }
                         _ => {
                             scene = Scene::Blank { matrix: &matrix };
                         }
                     }
                     previous_scene_id = new_scene_id;
                 }
-            },
-            _ => {},
+            }
+            _ => {}
         }
 
         scene.next().unwrap();
