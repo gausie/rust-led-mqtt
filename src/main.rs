@@ -9,8 +9,9 @@ mod matrix;
 const UNIQUE_ID: &str = "sams_led_matrix";
 
 fn create_mqtt_client() -> (rumqttc::Client, rumqttc::Connection) {
-    let mut options = rumqttc::MqttOptions::new(UNIQUE_ID, "beefy-boy.local", 1883);
+    let mut options = rumqttc::MqttOptions::new(UNIQUE_ID, "homeassistant.local", 1883);
     options.set_keep_alive(Duration::from_secs(5));
+    options.set_credentials("mqtt", "mqtt");
     rumqttc::Client::new(options, 10)
 }
 
